@@ -17,6 +17,13 @@ type Song struct {
 	Length int
 }
 
+//Genre : struct describing the table songs
+type Genre struct {
+	Name        string
+	Songs       int
+	TotalLength int
+}
+
 //Index : handler of songs index
 func Index(w http.ResponseWriter, r *http.Request) {
 	db, err := sql.Open("sqlite3", "./jrdd.db")
@@ -75,6 +82,37 @@ func IndexLength(w http.ResponseWriter, r *http.Request) {
 	rows.Close()
 
 	data, err := json.Marshal(songs)
+	checkErr(err)
+	fmt.Fprint(w, string(data))
+}
+
+// Genres : returns a list of genres, with total of songs and lengths
+func Genres(w http.ResponseWriter, r *http.Request) {
+	db, err := sql.Open("sqlite3", "./jrdd.db")
+	checkErr(err)
+
+	query := `SELECT name, count(songs.id) as songs, sum(songs.length) as total_length
+	FROM genres LEFT JOIN songs on genres.ID = songs.genre 
+	GROUP BY name
+	ORDER BY songs DESC`
+
+	rows, err := db.Query(query)
+	checkErr(err)
+
+	var genres []Genre
+
+	for rows.Next() {
+		genre := Genre{}
+		var totalLength sql.NullInt64
+		err = rows.Scan(&genre.Name, &genre.Songs, &totalLength)
+		checkErr(err)
+		genre.TotalLength = int(totalLength.Int64)
+		genres = append(genres, genre)
+	}
+
+	rows.Close()
+
+	data, err := json.Marshal(genres)
 	checkErr(err)
 	fmt.Fprint(w, string(data))
 }
