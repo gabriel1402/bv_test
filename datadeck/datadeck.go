@@ -19,6 +19,7 @@ func main() {
 	mux := goji.NewMux()
 	mux.HandleFunc(pat.Get("/hello/:name"), hello)
 	mux.HandleFunc(pat.Get("/songs"), songshelper.Index)
+	mux.HandleFunc(pat.Get("/songs/byLength"), songshelper.IndexLength)
 
 	fmt.Printf("Listening at localhost:8000")
 	http.ListenAndServe("localhost:8000", mux)
