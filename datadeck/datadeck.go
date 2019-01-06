@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bv_test/genreshelper"
 	"bv_test/songshelper"
 	"fmt"
 	"net/http"
@@ -10,17 +11,11 @@ import (
 	"goji.io/pat"
 )
 
-func hello(w http.ResponseWriter, r *http.Request) {
-	name := pat.Param(r, "name")
-	fmt.Fprintf(w, "Hello, %s!", name)
-}
-
 func main() {
 	mux := goji.NewMux()
-	mux.HandleFunc(pat.Get("/hello/:name"), hello)
 	mux.HandleFunc(pat.Get("/songs"), songshelper.Index)
 	mux.HandleFunc(pat.Get("/songs/byLength"), songshelper.IndexLength)
-	mux.HandleFunc(pat.Get("/genres"), songshelper.Genres)
+	mux.HandleFunc(pat.Get("/genres"), genreshelper.Genres)
 
 	fmt.Printf("Listening at localhost:8000")
 	http.ListenAndServe("localhost:8000", mux)

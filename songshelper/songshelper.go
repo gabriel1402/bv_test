@@ -17,27 +17,19 @@ type Song struct {
 	Length int
 }
 
-//Genre : struct describing the table songs
-type Genre struct {
-	Name        string
-	Songs       int
-	TotalLength int
-}
-
 //Index : handler of songs index
 func Index(w http.ResponseWriter, r *http.Request) {
 	db, err := sql.Open("sqlite3", "./jrdd.db")
 	checkErr(err)
 
-	query := `SELECT songs.id, songs.artist, songs.song, songs.length, genres.name as genre 
-	FROM songs inner join genres on songs.genre = genres.id `
-
-	if r.URL.Query().Get("query") != "" {
-		query = searchQuery(query, r.URL.Query().Get("query"))
-	}
+	query := fmt.Sprintf(
+		`SELECT songs.id, songs.artist, songs.song, songs.length, genres.name as genre 
+		FROM songs inner join genres on songs.genre = genres.id %v`,
+		searchQuery(r))
 
 	rows, err := db.Query(query)
 	checkErr(err)
+	defer rows.Close()
 
 	var songs []Song
 
@@ -47,8 +39,6 @@ func Index(w http.ResponseWriter, r *http.Request) {
 		checkErr(err)
 		songs = append(songs, song)
 	}
-
-	rows.Close()
 
 	data, err := json.Marshal(songs)
 	checkErr(err)
@@ -69,6 +59,7 @@ func IndexLength(w http.ResponseWriter, r *http.Request) {
 
 	rows, err := db.Query(query)
 	checkErr(err)
+	defer rows.Close()
 
 	var songs []Song
 
@@ -79,61 +70,32 @@ func IndexLength(w http.ResponseWriter, r *http.Request) {
 		songs = append(songs, song)
 	}
 
-	rows.Close()
-
 	data, err := json.Marshal(songs)
 	checkErr(err)
 	fmt.Fprint(w, string(data))
 }
 
-// Genres : returns a list of genres, with total of songs and lengths
-func Genres(w http.ResponseWriter, r *http.Request) {
-	db, err := sql.Open("sqlite3", "./jrdd.db")
-	checkErr(err)
-
-	query := `SELECT name, count(songs.id) as songs, sum(songs.length) as total_length
-	FROM genres LEFT JOIN songs on genres.ID = songs.genre 
-	GROUP BY name
-	ORDER BY songs DESC`
-
-	rows, err := db.Query(query)
-	checkErr(err)
-
-	var genres []Genre
-
-	for rows.Next() {
-		genre := Genre{}
-		var totalLength sql.NullInt64
-		err = rows.Scan(&genre.Name, &genre.Songs, &totalLength)
-		checkErr(err)
-		genre.TotalLength = int(totalLength.Int64)
-		genres = append(genres, genre)
+// searchQuery : returns the formatted string containing the 'where' clause of the index search query
+func searchQuery(r *http.Request) string {
+	if param := r.URL.Query().Get("query"); param != "" {
+		return fmt.Sprintf(
+			`where songs.artist like "%%%v%%" 
+			or songs.song like "%%%v%%"
+			or genres.name like "%%%v%%" `,
+			param, param, param)
 	}
-
-	rows.Close()
-
-	data, err := json.Marshal(genres)
-	checkErr(err)
-	fmt.Fprint(w, string(data))
+	return ""
 }
 
-func searchQuery(query string, param string) string {
-	return fmt.Sprintf(
-		`%v where songs.artist like "%%%v%%" 
-		or songs.song like "%%%v%%"
-		or genres.name like "%%%v%%" `,
-		query, param, param, param)
-}
-
+// buildQueryParams : returns the formatted string containing the 'where' clause of the song length query
 func buildQueryParams(r *http.Request) string {
-
 	var params []string
 
-	if r.URL.Query().Get("max") != "" {
-		params = append(params, fmt.Sprintf("songs.length < %v", r.URL.Query().Get("max")))
+	if max := r.URL.Query().Get("max"); max != "" {
+		params = append(params, fmt.Sprintf("songs.length < %v", max))
 	}
-	if r.URL.Query().Get("min") != "" {
-		params = append(params, fmt.Sprintf("songs.length > %v", r.URL.Query().Get("min")))
+	if min := r.URL.Query().Get("min"); min != "" {
+		params = append(params, fmt.Sprintf("songs.length > %v", min))
 	}
 	if len(params) > 0 {
 		return fmt.Sprintf("where %v", strings.Join(params, " and "))
