@@ -1,11 +1,12 @@
 # BeenVerified - DataDeck Engineer Technical Challenge
 
 ## Description
-API that exposes a data source of songs and genres. Developed with Go and Goji.
+API that exposes a data source of songs and genres in JSON format. Developed with [Go](https://golang.org/) language and [Goji](https://goji.io/) framework.
 
 ## Requirements
-- Go
-- SQLite
+- Go 1.11.4
+- Glide 0.13.2
+- SQLite 3.26
 - GNU Compiler Collection (gcc)
 
 ## Installation
@@ -16,6 +17,7 @@ Enter the cloned directory (bv_test) and run ```glide install``` to set the proj
 The main package of the project is `datadeck`, so you can generate the project executable with ```go install .\datadeck\```.
 
 After installing the project, return to your workspace. You can either run the `datadeck.exe` file generated in your workspace's `bin` directory or execute ```go run .\src\bv_text\datadeck\``` to get the server up. This will be running at `localhost:8000`.
+*Note: The jrdd.db file must be in the same place you run the project.
 
 ## API Reference
 
