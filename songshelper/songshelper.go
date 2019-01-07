@@ -42,6 +42,7 @@ func Index(w http.ResponseWriter, r *http.Request) {
 
 	data, err := json.Marshal(songs)
 	checkErr(err)
+	w.Header().Set("Content-Type", "application/json")
 	fmt.Fprint(w, string(data))
 }
 
@@ -72,6 +73,7 @@ func IndexLength(w http.ResponseWriter, r *http.Request) {
 
 	data, err := json.Marshal(songs)
 	checkErr(err)
+	w.Header().Set("Content-Type", "application/json")
 	fmt.Fprint(w, string(data))
 }
 

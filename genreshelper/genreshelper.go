@@ -41,6 +41,7 @@ func Genres(w http.ResponseWriter, r *http.Request) {
 
 	data, err := json.Marshal(genres)
 	checkErr(err)
+	w.Header().Set("Content-Type", "application/json")
 	fmt.Fprint(w, string(data))
 }
 
