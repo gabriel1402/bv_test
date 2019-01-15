@@ -27,21 +27,7 @@ func Index(w http.ResponseWriter, r *http.Request) {
 		FROM songs inner join genres on songs.genre = genres.id %v`,
 		searchQuery(r))
 
-	rows, err := db.Query(query)
-	checkErr(err)
-	defer rows.Close()
-
-	var songs []Song
-
-	for rows.Next() {
-		song := Song{}
-		err = rows.Scan(&song.ID, &song.Artist, &song.Song, &song.Length, &song.Genre)
-		checkErr(err)
-		songs = append(songs, song)
-	}
-
-	data, err := json.Marshal(songs)
-	checkErr(err)
+	data := executeSongsQuery(query, db)
 	w.Header().Set("Content-Type", "application/json")
 	fmt.Fprint(w, string(data))
 }
@@ -58,6 +44,13 @@ func IndexLength(w http.ResponseWriter, r *http.Request) {
 		ORDER BY songs.length DESC `,
 		buildQueryParams(r))
 
+	data := executeSongsQuery(query, db)
+	w.Header().Set("Content-Type", "application/json")
+	fmt.Fprint(w, string(data))
+}
+
+// executeSongsQuery : executes the query and returns the list of songs in JSON format
+func executeSongsQuery(query string, db *sql.DB) []byte {
 	rows, err := db.Query(query)
 	checkErr(err)
 	defer rows.Close()
@@ -73,8 +66,7 @@ func IndexLength(w http.ResponseWriter, r *http.Request) {
 
 	data, err := json.Marshal(songs)
 	checkErr(err)
-	w.Header().Set("Content-Type", "application/json")
-	fmt.Fprint(w, string(data))
+	return data
 }
 
 // searchQuery : returns the formatted string containing the 'where' clause of the index search query
