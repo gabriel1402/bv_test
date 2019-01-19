@@ -55,9 +55,9 @@ func Test_searchQuery(t *testing.T) {
 		{
 			"Test case 1",
 			args{request},
-			`where songs.artist like "%Color%" 
-			or songs.song like "%Color%"
-			or genres.name like "%Color%" `,
+			`where songs.artist like ? 
+			or songs.song like ?
+			or genres.name like ? `,
 		},
 	}
 	for _, tt := range tests {
@@ -82,12 +82,12 @@ func Test_buildQueryParams(t *testing.T) {
 		{
 			"Test case 1",
 			args{request},
-			`where songs.length < 200 and songs.length > 100`,
+			`where songs.length < ? and songs.length > ?`,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := buildQueryParams(tt.args.r); got != tt.want {
+			if got, _ := buildQueryParams(tt.args.r); got != tt.want {
 				t.Errorf("buildQueryParams() = %v, want %v", got, tt.want)
 			}
 		})
